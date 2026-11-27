@@ -53,6 +53,15 @@ const sha256 = createHash("sha256").update(bytes).digest("hex");
 mkdirSync(OUT_DIR, { recursive: true });
 copyFileSync(SOURCE, TARGET);
 
+// Verify the copy landed intact: read the target back and confirm its
+// hash matches the source, so a partial or corrupted write fails loudly
+// instead of submitting a different image than the one checked above.
+const copied = readFileSync(TARGET);
+const copiedSha256 = createHash("sha256").update(copied).digest("hex");
+if (copiedSha256 !== sha256) {
+  fail("copied entry.png does not match the source hash");
+}
+
 const written = statSync(TARGET).size;
 console.log(`wrote ${TARGET} (${written} bytes, ${width}x${height} PNG)`);
 console.log(`sha256 ${sha256}`);
